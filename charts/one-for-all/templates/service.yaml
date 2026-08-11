@@ -1,0 +1,17 @@
+{{/*
+Universal entrypoint supporting single- and multi-app modes.
+Handles both single Service (service:) and multiple Services (services:[]).
+*/}}
+
+{{- if .Values.apps }}
+{{- /* MULTI APP MODE */ -}}
+{{- range .Values.apps }}
+{{ include "ofa.services" (dict "root" $ "app" .) }}
+---
+{{- end }}
+
+{{- else if or .Values.service .Values.services }}
+{{- /* SINGLE APP MODE (BACKWARD COMPATIBLE) */ -}}
+{{ include "ofa.services" (dict "root" . "app" .Values) }}
+
+{{- end }}

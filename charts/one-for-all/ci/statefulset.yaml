@@ -1,0 +1,58 @@
+# CI test values: StatefulSet with persistence, configmap and extra volumes.
+global:
+  deploymentType: StatefulSet
+
+image:
+  repository: postgres
+  tag: "16"
+  pullPolicy: IfNotPresent
+
+serviceAccount: postgres-sa
+automountServiceAccountToken: false
+
+service:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+
+env:
+  - name: POSTGRES_DB
+    value: app
+
+secrets:
+  POSTGRES_PASSWORD: supersecret
+
+resources:
+  cpu: 500m
+  memory: 512Mi
+
+strategy:
+  type: RollingUpdate
+
+configmap:
+  - name: pg-config
+    podMountPath: /etc/postgresql
+    readOnly: true
+    data:
+      postgresql.conf: |
+        max_connections: 100
+        shared_buffers: 128MB
+
+persistence:
+  claims:
+    - name: data
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+      storageClass: standard
+      podMountPath: /var/lib/postgresql/data
+
+extraVolumes:
+  - name: tmp
+    emptyDir: {}
+
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp

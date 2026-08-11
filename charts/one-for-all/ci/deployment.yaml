@@ -1,0 +1,147 @@
+# CI test values: full Deployment (single-app) with every feature enabled.
+global:
+  fullnameOverride: ""
+  nameOverride: ""
+  deploymentType: Deployment
+  customLabels:
+    team: platform
+  customAnnotations:
+    managed-by: helm
+  image:
+    repository: nginx
+    tag: "1.27.0"
+    pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+imagePullSecrets:
+  - regcred
+
+command:
+  - /bin/sh
+  - -c
+args:
+  - nginx
+  - -g
+  - daemon off;
+
+serviceAccount: app-sa
+automountServiceAccountToken: false
+hostNetwork: false
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+
+nodeSelector:
+  kubernetes.io/os: linux
+affinity: {}
+tolerations: []
+
+securityContext:
+  pod:
+    runAsNonRoot: true
+  container:
+    readOnlyRootFilesystem: true
+
+env:
+  - name: APP_ENV
+    value: production
+
+secrets:
+  DB_PASSWORD: supersecret
+  API_KEY: token
+
+resources:
+  cpu: 200m
+  memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+configmap:
+  - name: app-config
+    podMountPath: /etc/app
+    readOnly: true
+    subPath: config.yaml
+    data:
+      config.yaml: |
+        logLevel: info
+        featureFlag: true
+
+persistence:
+  claims:
+    - name: data
+      accessModes:
+        - ReadWriteOnce
+      size: 1Gi
+      storageClass: standard
+      podMountPath: /data
+      annotations: {}
+
+extraVolumes:
+  - name: tmp
+    emptyDir: {}
+  - name: tls
+    secret:
+      name: app-tls
+
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp
+  - name: tls
+    mountPath: /etc/tls
+    readOnly: true
+
+ingress:
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 80
+  tls:
+    - hosts:
+        - app.example.com
+      secretName: app-example-com-tls
+
+networkPolicy:
+  ingress:
+    any:
+      - ports:
+          - protocol: TCP
+            port: 80
+    from:
+      - namespaceSelector:
+          team: backend
+        ports:
+          - protocol: TCP
+            port: 8080
+  egress:
+    any:
+      - ports:
+          - protocol: TCP
+            port: 443

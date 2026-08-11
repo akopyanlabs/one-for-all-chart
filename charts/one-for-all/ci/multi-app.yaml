@@ -1,0 +1,44 @@
+# CI test values: multiple applications in one release (apps[]).
+global:
+  customLabels:
+    team: platform
+
+apps:
+  - name: api
+    replicaCount: 2
+    image:
+      repository: nginx
+      tag: "1.27.0"
+    serviceAccount: api-sa
+    env:
+      - name: APP_NAME
+        value: api
+    resources:
+      cpu: 200m
+      memory: 256Mi
+    services:
+      - name: api-http
+        type: ClusterIP
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8080
+      - name: api-grpc
+        type: ClusterIP
+        ports:
+          - name: grpc
+            port: 9090
+            targetPort: 9090
+
+  - name: worker
+    image:
+      repository: busybox
+      tag: "1.36"
+    command:
+      - /bin/sh
+      - -c
+    args:
+      - sleep 3600
+    env:
+      - name: APP_NAME
+        value: worker

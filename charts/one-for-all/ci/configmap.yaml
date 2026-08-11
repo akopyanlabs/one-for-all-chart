@@ -1,0 +1,32 @@
+# CI test values: ConfigMap with multiple data entries.
+image:
+  repository: nginx
+  tag: "1.27.0"
+
+service:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+configmap:
+  - name: app-config
+    podMountPath: /etc/app
+    readOnly: true
+    data:
+      config.yaml: |
+        logLevel: info
+        featureFlag: true
+      application.properties: |
+        server.port=8080
+        spring.profiles.active=prod
+
+  - name: nginx-conf
+    podMountPath: /etc/nginx/conf.d
+    readOnly: true
+    data:
+      default.conf: |
+        server {
+          listen 80;
+          location / { proxy_pass http://127.0.0.1:8080; }
+        }

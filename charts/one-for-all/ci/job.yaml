@@ -1,0 +1,26 @@
+# CI test values: Job with env, secrets and resources.
+job:
+  image:
+    repository: curlimages/curl
+    tag: "8.7.1"
+    pullPolicy: IfNotPresent
+  command:
+    - /bin/sh
+    - -c
+    - echo "run migration"
+  backoffLimit: 1
+  activeDeadlineSeconds: 300
+  restartPolicy: Never
+  env:
+    - name: APP_ENV
+      value: production
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+secrets:
+  DB_PASSWORD: supersecret

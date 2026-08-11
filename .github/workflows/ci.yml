@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+      - ".github/workflows/ci.yml"
+  push:
+    branches-ignore:
+      - gh-pages
+    paths:
+      - "charts/**"
+      - ".github/workflows/ci.yml"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: helm lint (default values)
+        run: |
+          for chart in charts/*/; do
+            echo "::group::helm lint (default) ${chart}"
+            helm lint "${chart}"
+            echo "::endgroup::"
+          done
+
+      - name: helm lint (ci/ values per mode)
+        run: |
+          for chart in charts/*/; do
+            if compglob=$(compgen -G "${chart}ci/*.yaml") && [ -n "$compglob" ]; then
+              for f in "${chart}"ci/*.yaml; do
+                echo "::group::helm lint $(basename "${f}")"
+                helm lint "${chart}" -f "${f}"
+                echo "::endgroup::"
+              done
+            fi
+          done
+
+      - name: helm template renders without error
+        run: |
+          for chart in charts/*/; do
+            name=$(basename "${chart}")
+            echo "::group::helm template (default) ${chart}"
+            helm template "${name}" "${chart}" >/dev/null
+            echo "::endgroup::"
+            if compglob=$(compgen -G "${chart}ci/*.yaml") && [ -n "$compglob" ]; then
+              for f in "${chart}"ci/*.yaml; do
+                echo "::group::helm template $(basename "${f}")"
+                helm template "${name}" "${chart}" -f "${f}" >/dev/null
+                echo "::endgroup::"
+              done
+            fi
+          done

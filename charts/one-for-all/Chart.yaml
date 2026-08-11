@@ -1,0 +1,17 @@
+apiVersion: v2
+name: ofa
+description: Universal Helm chart for deploying applications to Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
+home: https://github.com/akopyanlabs/one-for-all-chart
+sources:
+  - https://github.com/akopyanlabs/one-for-all-chart
+maintainers:
+  - name: Armen Akopyan
+keywords:
+  - helm
+  - kubernetes
+  - deployment
+  - statefulset
+icon: https://raw.githubusercontent.com/helm/website/main/static/img/helm.svg

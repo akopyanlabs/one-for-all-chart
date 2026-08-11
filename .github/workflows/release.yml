@@ -1,0 +1,68 @@
+name: Release Chart
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Verify chart version matches git tag
+        id: version
+        run: |
+          set -euo pipefail
+          # git tag без префикса 'v'
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          # version из Chart.yaml (первое совпадение вида "version: X.Y.Z")
+          CHART_VERSION="$(grep -m1 -E '^version:' charts/one-for-all/Chart.yaml | awk '{print $2}')"
+          echo "Git tag:      ${TAG_VERSION}"
+          echo "Chart version: ${CHART_VERSION}"
+          if [ "${TAG_VERSION}" != "${CHART_VERSION}" ]; then
+            echo "::error::Version mismatch: git tag '${GITHUB_REF_NAME}' (-> ${TAG_VERSION}) != Chart.yaml version '${CHART_VERSION}'. Обнови version в Chart.yaml, чтобы он совпадал с тэгом, и передвинь тэг."
+            exit 1
+          fi
+          echo "version=${CHART_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: helm lint (default + ci/ modes)
+        run: |
+          set -euo pipefail
+          helm lint charts/one-for-all
+          if compglob=$(compgen -G "charts/one-for-all/ci/*.yaml") && [ -n "$compglob" ]; then
+            for f in charts/one-for-all/ci/*.yaml; do
+              helm lint charts/one-for-all -f "${f}"
+            done
+          fi
+
+      - name: helm template renders without error
+        run: |
+          set -euo pipefail
+          helm template test charts/one-for-all >/dev/null
+          if compglob=$(compgen -G "charts/one-for-all/ci/*.yaml") && [ -n "$compglob" ]; then
+            for f in charts/one-for-all/ci/*.yaml; do
+              helm template test charts/one-for-all -f "${f}" >/dev/null
+            done
+          fi
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
