@@ -12,6 +12,7 @@ automountServiceAccountToken: false
 
 service:
   type: ClusterIP
+  clusterIP: None        # headless — даёт pod'ам стабильные DNS-имена
   ports:
     - name: postgres
       port: 5432

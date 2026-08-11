@@ -31,6 +31,9 @@ spec:
   {{- if $svc.type }}
   type: {{ $svc.type | default "ClusterIP" }}
   {{- end }}
+  {{- if $svc.clusterIP }}
+  clusterIP: {{ $svc.clusterIP }}
+  {{- end }}
   {{- if $svc.loadBalancerIP }}
   loadBalancerIP: {{ $svc.loadBalancerIP }}
   {{- end }}

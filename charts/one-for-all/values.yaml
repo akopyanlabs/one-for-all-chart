@@ -40,6 +40,7 @@ strategy: {}
 
 service: {}
 # type: ClusterIP
+# clusterIP: None        # headless-сервис (для StatefulSet / прямого обращения к pod'ам)
 # annotations: {}
 # loadBalancerIP: ""
 # externalIPs: []

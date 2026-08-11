@@ -147,6 +147,7 @@ helm upgrade --install my-app . -n my-namespace --create-namespace -f ci/deploym
 | Ключ | Тип | По умолчанию | Описание |
 |------|-----|--------------|----------|
 | `service` | object | `{}` | Одиночный Service |
+| `service.clusterIP` | string | `""` | `None` → headless; иначе конкретный IP |
 | `services` | list | `[]` | Несколько Service (взаимоисключающе с `service`) |
 | `ingress` | object | `{}` | Ingress |
 | `networkPolicy` | object | `{}` | NetworkPolicy (ingress/egress) |
