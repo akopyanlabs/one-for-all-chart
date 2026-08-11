@@ -31,8 +31,8 @@ spec:
   {{- if $svc.type }}
   type: {{ $svc.type | default "ClusterIP" }}
   {{- end }}
-  {{- if $svc.clusterIP }}
-  clusterIP: {{ $svc.clusterIP }}
+  {{- if $svc.headless }}
+  clusterIP: None
   {{- end }}
   {{- if $svc.loadBalancerIP }}
   loadBalancerIP: {{ $svc.loadBalancerIP }}
@@ -76,7 +76,7 @@ Parameters:
 {{- $app := .app }}
 {{- if $app.services }}
 {{- range $app.services }}
-{{- $svcName := .name | default (include "ofa.fullname" $root) }}
+{{- $svcName := printf "%s-%s" (include "ofa.fullname" $root) .name }}
 {{ include "ofa.service.body" (dict "root" $root "app" $app "svc" . "svcName" $svcName) }}
 ---
 {{- end }}

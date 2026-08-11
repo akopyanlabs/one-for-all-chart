@@ -1,5 +1,19 @@
 {{- if eq .Values.global.deploymentType "StatefulSet" }}
 {{- if .Values.image }}
+{{/* Governing service for StatefulSet = serviceName.
+   Resolution: first service in services[] with headless: true,
+   else single service with headless: true, else fullname fallback. */}}
+{{- $governingName := include "ofa.fullname" . -}}
+{{- $found := false -}}
+{{- range $svc := .Values.services -}}
+{{-   if and (not $found) $svc.headless -}}
+{{-     $governingName = printf "%s-%s" (include "ofa.fullname" $) $svc.name -}}
+{{-     $found = true -}}
+{{-   end -}}
+{{- end -}}
+{{- if and (not $found) .Values.service .Values.service.headless -}}
+{{-   $governingName = .Values.service.name | default (include "ofa.fullname" .) -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -9,7 +23,7 @@ metadata:
     app.kubernetes.io/version: "{{ .Values.image.tag | default "latest" }}"
     {{- include "ofa.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "ofa.fullname" . }}
+  serviceName: {{ $governingName }}
   replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
@@ -61,12 +75,29 @@ spec:
             - {{ . | quote }}
             {{- end }}
           {{- end }}
+          {{- if .Values.services }}
+          {{- $hasPorts := false -}}
+          {{- range .Values.services }}{{- if .ports }}{{- $hasPorts = true }}{{- end }}{{- end }}
+          {{- if $hasPorts }}
+          ports:
+            {{- range .Values.services }}
+            {{- if .ports }}
+            {{- range .ports }}
+            - name: {{ .name | default "http" }}
+              protocol: {{ .protocol | default "TCP" }}
+              containerPort: {{ .targetPort | default .port }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- else if and .Values.service .Values.service.ports }}
           ports:
             {{- range .Values.service.ports }}
             - name: {{ .name | default "http" }}
               protocol: {{ .protocol | default "TCP" }}
-              containerPort: {{ .port }}
+              containerPort: {{ .targetPort | default .port }}
             {{- end }}
+          {{- end }}
           {{- with .Values.securityContext.container }}
           securityContext:
             {{- toYaml . | nindent 12 }}

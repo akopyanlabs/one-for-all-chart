@@ -40,7 +40,7 @@ strategy: {}
 
 service: {}
 # type: ClusterIP
-# clusterIP: None        # headless-сервис (для StatefulSet / прямого обращения к pod'ам)
+# headless: true         # headless-сервис (clusterIP: None). Для StatefulSet — governing-сервис.
 # annotations: {}
 # loadBalancerIP: ""
 # externalIPs: []
@@ -56,6 +56,8 @@ service: {}
 # Несколько Service на один workload. Используй, когда нужно открыть
 # приложение по нескольким портам/типам (http + grpc, public + admin...).
 # Каждый элемент имеет ту же структуру, что и `service`, плюс обязательное `name`.
+# Имя ресурса: <release>-<name> (напр. my-app-http).
+# Для StatefulSet: ровно один элемент с headless: true становится governing-сервисом.
 services: []
 # - name: http
 #   type: ClusterIP
@@ -71,6 +73,11 @@ services: []
 #       protocol: TCP
 #       port: 9090
 #       targetPort: 9090
+# - name: pg-headless      # для StatefulSet
+#   headless: true
+#   ports:
+#     - port: 5432
+#       targetPort: 5432
 
 nodeSelector: {}
 affinity: {}

@@ -147,8 +147,9 @@ helm upgrade --install my-app . -n my-namespace --create-namespace -f ci/deploym
 | Ключ | Тип | По умолчанию | Описание |
 |------|-----|--------------|----------|
 | `service` | object | `{}` | Одиночный Service |
-| `service.clusterIP` | string | `""` | `None` → headless; иначе конкретный IP |
-| `services` | list | `[]` | Несколько Service (взаимоисключающе с `service`) |
+| `service.headless` | bool | `false` | `true` → `clusterIP: None` (headless) |
+| `services` | list | `[]` | Несколько Service (взаимоисключающе с `service`); имя ресурса `<release>-<name>` |
+| `services[].headless` | bool | `false` | `true` → headless; для StatefulSet этот сервис становится governing (`serviceName`) |
 | `ingress` | object | `{}` | Ingress |
 | `networkPolicy` | object | `{}` | NetworkPolicy (ingress/egress) |
 

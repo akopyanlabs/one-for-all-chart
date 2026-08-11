@@ -1,0 +1,44 @@
+# CI test values: StatefulSet with multiple services (governing headless + client ClusterIP).
+global:
+  deploymentType: StatefulSet
+
+image:
+  repository: postgres
+  tag: "16"
+  pullPolicy: IfNotPresent
+
+serviceAccount: postgres-sa
+
+services:
+  - name: postgres-headless    # → governing (serviceName = <release>-postgres-headless)
+    headless: true
+    ports:
+      - name: postgres
+        port: 5432
+        targetPort: 5432
+  - name: postgres             # → обычный ClusterIP для клиентов
+    type: ClusterIP
+    ports:
+      - name: postgres
+        port: 5432
+        targetPort: 5432
+
+env:
+  - name: POSTGRES_DB
+    value: app
+
+secrets:
+  POSTGRES_PASSWORD: supersecret
+
+resources:
+  cpu: 500m
+  memory: 512Mi
+
+persistence:
+  claims:
+    - name: data
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+      storageClass: standard
+      podMountPath: /var/lib/postgresql/data
