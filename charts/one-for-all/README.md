@@ -80,10 +80,10 @@ helm uninstall my-app -n my-namespace
 
 | Файл | Что покрывает |
 |------|---------------|
-| [`ci/deployment.yaml`](./ci/deployment.yaml) | Полный Deployment: strategy, probes, resources, env+secrets, configmap, PVC, extraVolumes, ingress, networkPolicy |
+| [`ci/deployment.yaml`](./ci/deployment.yaml) | Полный Deployment: strategy, probes, lifecycle, resources, env+secrets, configmap, PVC, extraVolumes, ingress, networkPolicy |
 | [`ci/multi-service.yaml`](./ci/multi-service.yaml) | Single-app с несколькими Service (`services[]`: http + grpc + admin-NodePort) |
 | [`ci/configmap.yaml`](./ci/configmap.yaml) | Несколько ConfigMap с `data` (конфиги) |
-| [`ci/statefulset.yaml`](./ci/statefulset.yaml) | StatefulSet с persistence, configmap, extraVolumes |
+| [`ci/statefulset.yaml`](./ci/statefulset.yaml) | StatefulSet с command/args, persistence, configmap, extraVolumes, lifecycle |
 | [`ci/job.yaml`](./ci/job.yaml) | Job с env, secrets, resources |
 | [`ci/multi-app.yaml`](./ci/multi-app.yaml) | Несколько приложений одним релизом (`apps[]`) |
 
@@ -140,6 +140,7 @@ helm upgrade --install my-app . -n my-namespace --create-namespace -f ci/deploym
 | `resources` | object | `{}` | `{cpu,memory}` — применяются к limits и requests |
 | `livenessProbe` | object | `{}` | livenessProbe |
 | `readinessProbe` | object | `{}` | readinessProbe |
+| `lifecycle` | object | `{}` | postStart/preStop хуки контейнера (pass-through) |
 | `strategy` | object | `{}` | Стратегия обновления (Deployment/StatefulSet) |
 
 ### Сеть

@@ -102,6 +102,14 @@ resources: {}
 livenessProbe: {}
 readinessProbe: {}
 
+lifecycle: {}
+# postStart:
+#   exec:
+#     command: ["/bin/sh", "-c", "echo started"]
+# preStop:
+#   exec:
+#     command: ["/bin/sh", "-c", "sleep 10"]
+
 configmap: []
 # - name: app-config
 #   podMountPath: /etc/app

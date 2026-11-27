@@ -192,6 +192,10 @@ spec:
               memory: {{ $app.resources.memory | quote | default "512Mi" }}
               {{- end }}
           {{- end }}
+          {{- with $app.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
 
           {{- with $app.livenessProbe }}
           livenessProbe:
