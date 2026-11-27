@@ -69,6 +69,12 @@ spec:
         - name: {{ include "ofa.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          {{- if .Values.command }}
+          command:
+            {{- range .Values.command }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- end }}
           {{- if .Values.args }}
           args:
             {{- range .Values.args }}
@@ -135,6 +141,17 @@ spec:
           {{- with .Values.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.lifecycle.enabled }}
+          lifecycle:
+            {{- with .Values.lifecycle.postStart }}
+            postStart:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.lifecycle.preStop }}
+            preStop:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
           {{- end }}
 
           {{- if or .Values.persistence.claims .Values.configmap .Values.extraVolumeMounts }}

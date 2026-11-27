@@ -221,3 +221,18 @@ apps: []
 #     - -c
 #   args:
 #     - sleep 3600
+
+lifecycle:
+  enabled: false                # Глобальный выключатель (если false — хуки не рендерятся)
+  postStart: {}                 # Блок postStart (пустой по умолчанию)
+  preStop: {}
+
+# Пример с exec:
+# lifecycle:
+#   enabled: true
+#   postStart:
+#     exec:
+#       command: ["/bin/sh", "-c", "echo Container started"]
+#   preStop:
+#     exec:
+#       command: ["/bin/sh", "-c", "sleep 10"]
